@@ -187,10 +187,15 @@ def run_simulation(df, holidays):
 # KPI reporting
 # ---------------------------------------------------------------------------
 
-def print_kpis(trades):
+def print_kpis(trades, market_df):
     if not trades:
         print("\nNo completed trades found.")
         return
+
+    # Buy-and-hold benchmark: first open → last close over the same period
+    index_open  = market_df['ta35_open'].iloc[0]
+    index_close = market_df['ta35_close'].iloc[-1]
+    index_yield = (index_close - index_open) / index_open * 100
 
     df = pd.DataFrame(trades)
     total    = len(df)
@@ -198,11 +203,13 @@ def print_kpis(trades):
     losses   = (df['exit_reason'] == 'SELL_SL').sum()
     open_end = (df['exit_reason'] == 'OPEN_AT_END').sum()
     cum_ret  = ((1 + df['pnl_pct'] / 100).prod() - 1) * 100
+    vs_index = cum_ret - index_yield
 
     print("\n" + "=" * 62)
     print("   ALGO SIMULATOR - PERFORMANCE REPORT")
     print("=" * 62)
-    print(f"  Period       : {df['entry_time'].min().date()} -> {df['exit_time'].max().date()}")
+    print(f"  Period       : {market_df.index[0].date()} -> {market_df.index[-1].date()}")
+    print(f"  Index yield  : {index_yield:+.2f}%  (TA35 buy-and-hold target to beat)")
     print(f"  Total trades : {total}")
     print(f"    Wins (TP)  : {wins}")
     print(f"    Losses (SL): {losses}")
@@ -211,6 +218,7 @@ def print_kpis(trades):
     print(f"  Avg P&L/trade: {df['pnl_pct'].mean():+.2f}%")
     print(f"  Total P&L    : {df['pnl_pct'].sum():+.2f}%")
     print(f"  Compounded   : {cum_ret:+.2f}%")
+    print(f"  vs Index     : {vs_index:+.2f}%")
     print(f"  Best trade   : {df['pnl_pct'].max():+.2f}%")
     print(f"  Worst trade  : {df['pnl_pct'].min():+.2f}%")
     print(f"  Avg hold     : {df['hold_hours'].mean():.1f} hours")
@@ -234,4 +242,4 @@ def print_kpis(trades):
 if __name__ == "__main__":
     df, holidays = load_data()
     trades = run_simulation(df, holidays)
-    print_kpis(trades)
+    print_kpis(trades, df)

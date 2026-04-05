@@ -1,12 +1,14 @@
 # Market data (large CSVs — store locally, not in repo)
 data/
 
-# Research artefacts
+# Research artefacts (auto-generated at runtime)
 research-history/
 results.tsv
+research_progress.png
 __pycache__/
 *.pyc
 *.pyo
+*.tmp
 .env
 
 # Large model files
