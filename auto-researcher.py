@@ -5,14 +5,14 @@ Inspired by Karpathy's autoresearch pattern.
 
 Autonomously optimizes Algo-machine.py by:
   1. Running algo-simulator.py to get KPI results
-  2. Feeding results + current code to Claude (market data never exposed)
-  3. Applying Claude's suggested code modifications
+  2. Feeding results + current code to Gemma 4 (market data never exposed)
+  3. Applying Gemma's suggested code modifications
   4. Scoring: primary = win rate ≥ 75%, secondary = max compounded P&L
   5. Keeping improvements, reverting failures
   6. Logging every iteration to results.tsv
 
 Usage:
-  export ANTHROPIC_API_KEY=sk-ant-...
+  export GOOGLE_API_KEY=AIza...   # Google AI Studio free key
   python3 auto-researcher.py [--iterations N] [--model MODEL]
 
 Targets:
@@ -31,7 +31,8 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
-import anthropic
+from google import genai
+from google.genai import types
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -231,7 +232,7 @@ def backup_algo(iteration: int, label: str):
 # ---------------------------------------------------------------------------
 
 def research_loop(n_iterations: int, model: str, api_key: str):
-    client = anthropic.Anthropic(api_key=api_key)
+    client = genai.Client(api_key=api_key)
 
     # Load researcher instructions
     program_md = PROG_FILE.read_text()
@@ -301,16 +302,19 @@ Output your analysis (2-4 sentences) then the complete new Algo-machine.py
 inside <algo_machine>...</algo_machine> tags.
 """
 
-        # --- Call Claude ---
-        print("[RESEARCHER] Calling Claude API...")
+        # --- Call Gemma via Google AI Studio ---
+        print("[RESEARCHER] Calling Gemma 4 (Google AI Studio)...")
         try:
-            response = client.messages.create(
+            response = client.models.generate_content(
                 model=model,
-                max_tokens=4096,
-                system=program_md,
-                messages=[{"role": "user", "content": user_prompt}]
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=program_md,
+                    max_output_tokens=4096,
+                    temperature=0.7,
+                ),
             )
-            response_text = response.content[0].text
+            response_text = response.text
         except Exception as e:
             print(f"[ERROR] API call failed: {e}")
             log_result(iteration, best_kpis, float('-inf'), "api_error", str(e)[:80])
@@ -407,14 +411,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="TA35 Algo Auto Researcher")
     parser.add_argument("--iterations", type=int, default=20,
                         help="Number of research iterations (default: 20)")
-    parser.add_argument("--model", type=str, default="claude-sonnet-4-6",
-                        help="Claude model to use (default: claude-sonnet-4-6)")
+    parser.add_argument("--model", type=str, default="gemma-3-27b-it",
+                        help="Google AI Studio model (default: gemma-3-27b-it)")
     args = parser.parse_args()
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    api_key = os.environ.get("GOOGLE_API_KEY", "")
     if not api_key:
-        print("[ERROR] ANTHROPIC_API_KEY environment variable not set.")
-        print("  export ANTHROPIC_API_KEY=sk-ant-...")
+        print("[ERROR] GOOGLE_API_KEY environment variable not set.")
+        print("  Get a free key at https://aistudio.google.com/apikey")
+        print("  export GOOGLE_API_KEY=AIza...")
         sys.exit(1)
 
     research_loop(args.iterations, args.model, api_key)
