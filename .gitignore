@@ -1,0 +1,23 @@
+# Market data (large CSVs — store locally, not in repo)
+data/
+
+# Research artefacts
+research-history/
+results.tsv
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Large model files
+models/
+*.gguf
+*.bin
+
+# llama.cpp build
+llama.cpp-upstream/
+
+# IDE
+.vscode/
+.idea/
+*.swp
