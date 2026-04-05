@@ -4,7 +4,6 @@ data/
 # Research artefacts (auto-generated at runtime)
 research-history/
 results.tsv
-research_progress.png
 __pycache__/
 *.pyc
 *.pyo

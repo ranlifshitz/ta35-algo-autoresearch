@@ -16,6 +16,10 @@ The system iteratively improves a signal-scoring engine for the Tel Aviv 35 (TA3
 | Total trades | 43 | 88 |
 | Score | −1425 | **+178.9** |
 
+![Research Progress](research_progress_readme.png)
+*Score progression, compounded P&L vs index yield, and win rate across ~170 iterations.
+Green stars = improvements kept. Orange dots = discarded. Red dashed line = TA35 buy-and-hold benchmark.*
+
 ---
 
 ## Architecture
